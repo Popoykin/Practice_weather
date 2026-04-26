@@ -1,5 +1,6 @@
 import requests
 import psycopg2
+import logging
 
 DB_CONFIG = {
     "dbname": "postgres_practice_gpt",

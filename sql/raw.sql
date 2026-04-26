@@ -1,14 +1,16 @@
 create schema if not exists raw;
 
-create table if not exists api_dummyjson
+create table if not exists raw.api_dummyjson
 (
   id integer,
-  firstname text,
-  lastname text,
-  age integer,
-  gender text,
-  country text,
-  companyname text,
-  update_at timestamp,
-  load_at timestamp
+  user_json JSONB,
+  loaded_at timestamp
 );
+
+create table if not exists raw.etl_state
+(
+  id integer,
+  last_upadate timestamp,
+  last_load_at timestamp,
+
+)
