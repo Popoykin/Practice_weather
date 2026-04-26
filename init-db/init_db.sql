@@ -1,0 +1,1 @@
+create database postgres_practice_gpt;
