@@ -3,6 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 from scripts.cities import main as load_cities
 from scripts.actual_weather import main as load_actual_weather
+from scripts.forecasted_weather import main as load_forecast_weather
 
 with DAG(
     dag_id="weather_pipeline",
@@ -21,4 +22,9 @@ with DAG(
         python_callable=load_actual_weather
     )
 
-    load_cities_task >> actual_weather_task
+    forecast_weather_task = PythonOperator(
+        task_id="load_forecast_weather",
+        python_callable=load_forecast_weather
+    )
+
+    load_cities_task >> actual_weather_task >> forecast_weather_task
