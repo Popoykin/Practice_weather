@@ -16,11 +16,11 @@ logging.basicConfig(
 )
 
 DB_CONFIG = {
-  "dbname": os.getenv("dbname"),
-  "user": os.getenv("user"),
-  "password": os.getenv("password"),
-  "host": os.getenv("host"),
-  "port": os.getenv("port")
+  "dbname": os.getenv("DB_NAME"),
+  "user": os.getenv("DB_USER"),
+  "password": os.getenv("DB_PASSWORD"),
+  "host": os.getenv("DB_HOST"),
+  "port": os.getenv("DB_PORT")
 }
 
 API_URL = "https://api.open-meteo.com/v1/forecast"

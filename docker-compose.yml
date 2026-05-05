@@ -1,13 +1,16 @@
+version: "3.8"
+
 services:
 
   postgres:
     image: postgres:15
-    ports:
-      - "5432:5432"
+    container_name: postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db:/docker-entrypoint-initdb.d
@@ -16,50 +19,83 @@ services:
 
   airflow-webserver:
     image: apache/airflow:2.8.0
+    container_name: airflow-webserver
     command: webserver
     depends_on:
       - postgres
     ports:
       - "8080:8080"
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - PYTHONPATH=/opt/airflow
+
+      # ❗ ОТКЛЮЧАЕМ REMOTE LOGGING (фикс твоей ошибки)
+      - AIRFLOW__LOGGING__REMOTE_LOGGING=False
+
+      # стабильное имя хоста
+      - AIRFLOW__CORE__HOSTNAME_CALLABLE=socket:gethostname
+
+      # secret key (фикс 403)
+      - AIRFLOW__WEBSERVER__SECRET_KEY=my_super_secret_key
+      - DB_HOST=postgres
+      - DB_NAME=postgres_practice_gpt
+      - DB_USER=airflow
+      - DB_PASSWORD=airflow
+      - DB_PORT=5432
+
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
+      - ./logs:/opt/airflow/logs
     networks:
       - airflow-net
 
   airflow-scheduler:
     image: apache/airflow:2.8.0
+    container_name: airflow-scheduler
     command: scheduler
     depends_on:
       - postgres
     environment:
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - PYTHONPATH=/opt/airflow
+
+      # ❗ то же самое, обязательно
+      - AIRFLOW__LOGGING__REMOTE_LOGGING=False
+      - AIRFLOW__CORE__HOSTNAME_CALLABLE=socket:gethostname
+      - DB_HOST=postgres
+      - DB_NAME=postgres_practice_gpt
+      - DB_USER=airflow
+      - DB_PASSWORD=airflow
+      - DB_PORT=5432
+
     volumes:
       - ./dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
+      - ./logs:/opt/airflow/logs
     networks:
       - airflow-net
 
   airflow-init:
     image: apache/airflow:2.8.0
+    container_name: airflow-init
     depends_on:
       - postgres
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     command: >
       bash -c "
       airflow db init &&
-      airflow users create \
-      --username admin \
-      --password admin \
-      --firstname Peter \
-      --lastname Parker \
-      --role Admin \
-      --email admin@example.com"
-    environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      airflow users create
+      --username admin
+      --password admin
+      --firstname Admin
+      --lastname User
+      --role Admin
+      --email admin@example.com
+      "
     networks:
       - airflow-net
 
